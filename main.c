@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "miniSoundTools.h"
+#include "soundlib.h"
 
 int main() {
     
