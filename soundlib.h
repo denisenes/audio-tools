@@ -164,11 +164,11 @@ WavFile * wavInitFromFile(char * fileName) {
     }
 }
 
-int wavWrite(WavFile * file) {
+int wavWrite(WavFile * file, char * filepath) {
 
     // if we haven't received empty structure then let's write header and data to the file
     if (file != NULL) {
-        output = freopen("output.wav", "wb", stdout);
+        output = freopen(filepath, "wb", stdout);
 
         // Header writing
         if (fwrite(&file->header, sizeof(WavHeader), 1, output) == 0) {
@@ -320,6 +320,17 @@ WavFile * mixer(int64_t N, ...) {
     return newWave;
 }
 
+// It works as mixer but we don't need allocate memory
+// Result wave will be written into wave1
+WavFile * mixer2(WavFile * wave1, WavFile * wave2) {
+    uint32_t size = wave1->header.subchunk2Size / (wave1->header.bitsPerSample / 8);
+    // Plus plus plus plus...
+    for (int j = 0; j < size; j++) {
+        wave1->data[j].dMode32 /= 2;
+        wave1->data[j].dMode32 += (wave2->data[j].dMode32 / 2);
+    }
+}
+
 //========================================================
 //                    Filters
 //========================================================
@@ -365,6 +376,13 @@ void ADSR(WavFile * wave, double attack, double decay, double sustain, double su
     // modulate amplitude of the input wave using the envelope wave
     for (int i = 0; i < size; i++) {
         wave->data[i].dMode32 = (int32_t) ((double) wave->data[i].dMode32 * envelopeWave[i]);
+    }
+}
+
+void LFO(WavFile * wave, WavFile * modWave) {
+    uint32_t size = wave->header.subchunk2Size / (wave->header.bitsPerSample / 8);
+    for (int j = 0; j < size; j++) {
+        wave->data[j].dMode32 = (int32_t) ((double) wave->data[j].dMode32 * modWave->data[j].dMode32 / (INT32_MAX / 2));
     }
 }
 
